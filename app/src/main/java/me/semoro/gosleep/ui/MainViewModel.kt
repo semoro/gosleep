@@ -10,9 +10,9 @@ import kotlinx.datetime.TimeZone
 import me.semoro.gosleep.data.UserSettings
 import me.semoro.gosleep.data.UserSettingsRepository
 import me.semoro.gosleep.receiver.ChargingReceiver
-import me.semoro.gosleep.service.BedtimeManager
-import me.semoro.gosleep.service.WifiMonitor
+import me.semoro.gosleep.service.AlarmControl
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
 data class MainScreenState(
     val currentTime: Instant,
@@ -46,6 +46,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         startTimeUpdates()
+        userSettingsRepository.userSettingsFlow.onEach { settings ->
+            AlarmControl.setAlarm(application.applicationContext,
+                0, Clock.System.now() + 1.seconds
+            )
+        }.launchIn(viewModelScope)
     }
 
 

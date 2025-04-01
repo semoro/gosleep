@@ -6,6 +6,8 @@ import android.content.Intent
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        TODO("Not yet implemented")
+        println("Received intent alarm: $intent")
+        // determine current zone and set next alarm
+
     }
 }

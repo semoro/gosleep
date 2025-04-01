@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "me.semoro.gosleep"
-        minSdk = 26
+        minSdk = 31
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
