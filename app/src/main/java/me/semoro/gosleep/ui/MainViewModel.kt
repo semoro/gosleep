@@ -1,6 +1,9 @@
 package me.semoro.gosleep.ui
 
+import android.app.AlarmManager
 import android.app.Application
+import android.content.Context
+import android.net.wifi.WifiManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
@@ -9,17 +12,18 @@ import kotlinx.datetime.*
 import kotlinx.datetime.TimeZone
 import me.semoro.gosleep.data.UserSettings
 import me.semoro.gosleep.data.UserSettingsRepository
-import me.semoro.gosleep.receiver.ChargingReceiver
 import me.semoro.gosleep.service.AlarmControl
+import me.semoro.gosleep.service.AlarmTriggerPrecondition
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
 data class MainScreenState(
     val currentTime: Instant,
     val userSettings: UserSettings? = null,
-    val isAtHome: Boolean = false,
-    val isCharging: Boolean = false,
-    val currentZone: BedtimeZone = BedtimeZone.NONE
+    val wifiName: String? = null,
+    val chargingState: AlarmTriggerPrecondition.ChargingState = AlarmTriggerPrecondition.ChargingState(false, null),
+    val currentZone: BedtimeZone = BedtimeZone.NONE,
+    val nextAlarmTime: Instant? = null
 )
 
 enum class BedtimeZone {
@@ -31,28 +35,31 @@ enum class BedtimeZone {
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val userSettingsRepository = UserSettingsRepository(application)
-//    private val bedtimeManager = BedtimeManager(application)
-    private val chargingReceiver = ChargingReceiver { isCharging ->
-        _isCharging.value = isCharging
-//        if (isCharging) {
-//            bedtimeManager.cancelBeep()
-//        }
-    }
     private val timer = Timer()
 
     private val _currentTime = MutableStateFlow(Clock.System.now())
-    private val _isAtHome = MutableStateFlow(false)
-    private val _isCharging = MutableStateFlow(false)
+
+
+
+
+    private val wifiName = MutableStateFlow(run {
+        AlarmTriggerPrecondition.getWifiNetwork(application)
+    })
+    private val chargingState = MutableStateFlow(run {
+        AlarmTriggerPrecondition.getChargingState(application)
+    })
 
     init {
         startTimeUpdates()
         userSettingsRepository.userSettingsFlow.onEach { settings ->
-            AlarmControl.setAlarm(application.applicationContext,
-                0, Clock.System.now() + 1.seconds
-            )
+            triggerInitialAlarm()
         }.launchIn(viewModelScope)
     }
 
+
+    fun triggerInitialAlarm() {
+        AlarmControl.setAlarm(getApplication(), 0, Clock.System.now() + 10.seconds)
+    }
 
     private fun startTimeUpdates() {
         timer.schedule(object : TimerTask() {
@@ -65,43 +72,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
         super.onCleared()
         timer.cancel()
-        ChargingReceiver.unregister(getApplication(), chargingReceiver)
-//        bedtimeManager.cancelBeep()
     }
 
     val mainScreenState: StateFlow<MainScreenState> = combine(
         _currentTime,
         userSettingsRepository.userSettingsFlow,
-        _isAtHome,
-        _isCharging
-    ) { currentTime, userSettings, isAtHome, isCharging ->
+        wifiName,
+        chargingState
+    ) { currentTime, userSettings, wifiName, chargingState ->
+        val alarmManager = application.applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         MainScreenState(
             currentTime = currentTime,
             userSettings = userSettings,
-            isAtHome = isAtHome,
-            isCharging = isCharging,
-            currentZone = calculateCurrentZone(currentTime, userSettings)
+            wifiName = wifiName,
+            chargingState = chargingState,
+            currentZone = userSettings.calculateCurrentZone(currentTime),
+            nextAlarmTime = alarmManager.nextAlarmClock?.triggerTime?.let { Instant.fromEpochMilliseconds(it) }
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = MainScreenState(Clock.System.now())
     )
-
-    private fun calculateCurrentZone(instant: Instant, settings: UserSettings?): BedtimeZone {
-        if (settings == null) return BedtimeZone.NONE
-
-        val currentDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-
-        val newZone = when {
-            instant < settings.calculateBedtimeStart(currentDateTime) -> BedtimeZone.NONE
-            instant < settings.calculateYellowZoneStart(currentDateTime) -> BedtimeZone.GREEN
-            instant < settings.calculateRedZoneStart(currentDateTime) -> BedtimeZone.YELLOW
-            else -> BedtimeZone.RED
-        }
-
-        return newZone
-    }
 
     fun updateWakeUpTime(time: LocalTime) {
         viewModelScope.launch {

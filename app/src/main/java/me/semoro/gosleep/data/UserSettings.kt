@@ -8,9 +8,15 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atDate
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
+import me.semoro.gosleep.GREEN_BEEP_INTERVAL
+import me.semoro.gosleep.RED_BEEP_INTERVAL
+import me.semoro.gosleep.YELLOW_BEEP_INTERVAL
+import me.semoro.gosleep.ui.BedtimeZone
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 
 /**
@@ -28,8 +34,9 @@ data class UserSettings(
     val desiredSleepDuration: Duration = 8.hours, // Default 8 hours of sleep
     val greenZoneDuration: Duration = 30.minutes, // Default 30 minutes for yellow zone
     val yellowZoneDuration: Duration = 30.minutes, // Default 30 minutes for red zone
-    val beepIntervalYellow: Duration = 10.minutes,
-    val beepIntervalRed: Duration = 5.minutes,
+    val beepIntervalGreen: Duration = GREEN_BEEP_INTERVAL,
+    val beepIntervalYellow: Duration = YELLOW_BEEP_INTERVAL,
+    val beepIntervalRed: Duration = RED_BEEP_INTERVAL,
     val homeWifiSSID: String? = null
 ) {
 
@@ -62,4 +69,19 @@ data class UserSettings(
      * @return LocalTime representing when red zone starts
      */
     fun calculateRedZoneStart(currentTime: LocalDateTime): Instant = calculateYellowZoneStart(currentTime) + yellowZoneDuration
+
+
+    fun calculateCurrentZone(instant: Instant): BedtimeZone {
+
+        val currentDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+
+        val newZone = when {
+            instant < calculateBedtimeStart(currentDateTime) -> BedtimeZone.NONE
+            instant < calculateYellowZoneStart(currentDateTime) -> BedtimeZone.GREEN
+            instant < calculateRedZoneStart(currentDateTime) -> BedtimeZone.YELLOW
+            else -> BedtimeZone.RED
+        }
+
+        return newZone
+    }
 }

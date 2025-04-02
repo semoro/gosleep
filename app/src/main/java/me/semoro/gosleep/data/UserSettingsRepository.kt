@@ -7,6 +7,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalTime
+import me.semoro.gosleep.HOME_SSID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
@@ -35,19 +36,19 @@ class UserSettingsRepository(private val context: Context) {
             ?: 30.minutes
         val redZoneDuration = preferences[PreferencesKeys.RED_ZONE_DURATION]?.milliseconds
             ?: 30.minutes
-        val yellowInterval = preferences[PreferencesKeys.BEEP_INTERVAL_YELLOW]?.milliseconds
-            ?: 10.minutes
-        val redInterval = preferences[PreferencesKeys.BEEP_INTERVAL_RED]?.milliseconds
-            ?: 5.minutes
-        val homeWifiSSID = preferences[PreferencesKeys.HOME_WIFI_SSID]
+//        val yellowInterval = preferences[PreferencesKeys.BEEP_INTERVAL_YELLOW]?.milliseconds
+//            ?: 10.minutes
+//        val redInterval = preferences[PreferencesKeys.BEEP_INTERVAL_RED]?.milliseconds
+//            ?: 5.minutes
+        val homeWifiSSID = preferences[PreferencesKeys.HOME_WIFI_SSID] ?: HOME_SSID
 
         UserSettings(
             wakeUpTime = LocalTime(hour, minute, 0, 0),
             desiredSleepDuration = sleepDuration,
             greenZoneDuration = yellowZoneDuration,
             yellowZoneDuration = redZoneDuration,
-            beepIntervalYellow = yellowInterval,
-            beepIntervalRed = redInterval,
+//            beepIntervalYellow = yellowInterval,
+//            beepIntervalRed = redInterval,
             homeWifiSSID = homeWifiSSID
         )
     }

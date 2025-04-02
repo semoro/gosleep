@@ -18,6 +18,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+<!--    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>-->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <application
             android:allowBackup="true"
             android:dataExtractionRules="@xml/data_extraction_rules"
@@ -28,6 +34,7 @@
             android:supportsRtl="true"
             android:theme="@style/Theme.GoSleep"
             tools:targetApi="31">
+
         <activity
                 android:name=".MainActivity"
                 android:exported="true"
@@ -42,9 +49,25 @@
 
 
         </activity>
-        <receiver android:name=".service.AlarmReceiver" android:exported="true" android:permission="android.permission.SCHEDULE_EXACT_ALARM">
+        <activity
+                android:name=".ui.FullScreenAlarmActivity"
+                android:exported="true"
+                android:theme="@style/Theme.GoSleep"
+                android:showOnLockScreen="true"
+                android:turnScreenOn="true"
+                android:showWhenLocked="true"
+                android:launchMode="singleInstance"
+        />
+        <receiver android:name=".service.AlarmReceiver" android:exported="true" android:permission="android.permission.USE_EXACT_ALARM">
 
         </receiver>
+        <receiver android:name=".service.BootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
     </application>
+
 
 </manifest>

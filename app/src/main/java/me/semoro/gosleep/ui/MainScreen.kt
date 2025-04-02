@@ -1,15 +1,19 @@
 package me.semoro.gosleep.ui
 
+import android.app.AlarmManager
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -101,28 +105,47 @@ fun MainScreen(
                     },
                     enabled = true
                 )
+
+
+                AssistChip(
+                    onClick = { },
+                    label = { Text(state.wifiName ?: "No Wifi") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = if (state.wifiName == settings.homeWifiSSID && settings.homeWifiSSID != null) Icons.Default.Home else Icons.Default.LocationOn,
+                            contentDescription = null
+                        )
+                    }
+                )
             }
 
 
-            val isAtHome = state.isAtHome
-            val isCharging = state.isCharging
+
+
             AssistChip(
                 onClick = { },
-                label = { Text(if (isAtHome) "At Home" else "Away") },
+                label = { Text(state.chargingState.plugStatus ?: "Not connected") },
                 leadingIcon = {
                     Icon(
-                        imageVector = if (isAtHome) Icons.Default.Home else Icons.Default.LocationOn,
+                        imageVector = if (state.chargingState.isCharging || state.chargingState.plugStatus != null) Icons.Default.Check else Icons.Default.Close,
                         contentDescription = null
                     )
                 }
             )
 
+
+            val nextAlarmTime = state.nextAlarmTime
             AssistChip(
-                onClick = { },
-                label = { Text(if (isCharging) "Charging" else "Not Charging") },
+                onClick = {
+                    viewModel.triggerInitialAlarm()
+                },
+                label = {
+                    // get the next alarm time
+                    Text(nextAlarmTime?.toString() ?: "<error>")
+                },
                 leadingIcon = {
                     Icon(
-                        imageVector = if (isCharging) Icons.Default.Check else Icons.Default.Close,
+                        imageVector = Icons.Default.Refresh,
                         contentDescription = null
                     )
                 }
