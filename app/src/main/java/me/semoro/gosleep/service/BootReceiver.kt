@@ -10,6 +10,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import me.semoro.gosleep.data.UserSettingsRepository
 import me.semoro.gosleep.ui.BedtimeZone
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -19,37 +20,13 @@ import kotlin.time.Duration.Companion.seconds
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            println("Boot completed, restoring alarm")
-            
-            runBlocking {
-                // Get user settings
-                val userSettingsRepository = UserSettingsRepository(context)
-                val userSettings = userSettingsRepository.userSettingsFlow.first()
-                
-                // Calculate current time and bedtime zone
-                val currentTime = Clock.System.now()
-                val currentDateTime = currentTime.toLocalDateTime(TimeZone.currentSystemDefault())
-                val currentZone = userSettings.calculateCurrentZone(currentTime)
-                
-                println("Boot receiver restoring alarm at $currentTime, current zone: $currentZone")
-                
-                // Set the next alarm based on the current zone
-                val nextAlarmTime = when (currentZone) {
-                    BedtimeZone.NONE -> userSettings.calculateBedtimeStart(currentDateTime) + 1.seconds
-                    BedtimeZone.GREEN -> Clock.System.now() + userSettings.beepIntervalGreen
-                    BedtimeZone.YELLOW -> Clock.System.now() + userSettings.beepIntervalYellow
-                    BedtimeZone.RED -> Clock.System.now() + userSettings.beepIntervalRed
-                }
-                
-                // Set the next alarm
-                AlarmControl.setAlarm(
-                    context,
-                    0,
-                    nextAlarmTime
-                )
-                
-                println("Alarm restored after boot, next alarm at: $nextAlarmTime")
-            }
+
+            // Set the next alarm within a minute, it will reschedule properly afterward
+            AlarmControl.setAlarm(
+                context,
+                0,
+                Clock.System.now() + 1.minutes
+            )
         }
     }
 }

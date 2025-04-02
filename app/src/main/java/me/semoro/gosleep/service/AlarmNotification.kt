@@ -38,7 +38,7 @@ object AlarmNotification {
 
         // Build the notification
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.baseline_alarm_24)
             .setContentTitle("Go sleep")
             .setContentText(notificationText)
             .setPriority(NotificationCompat.PRIORITY_HIGH)

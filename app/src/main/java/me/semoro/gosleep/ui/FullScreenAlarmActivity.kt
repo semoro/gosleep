@@ -66,7 +66,7 @@ class FullScreenAlarmActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding),
                         repository = repository,
                         onPuzzleSolved = {
-                            finish()
+                            finishAndRemoveTask()
                         }
                     )
                 }

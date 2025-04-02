@@ -28,10 +28,10 @@
             android:allowBackup="true"
             android:dataExtractionRules="@xml/data_extraction_rules"
             android:fullBackupContent="@xml/backup_rules"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_new_low"
             android:label="@string/app_name"
-            android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
+            android:roundIcon="@mipmap/ic_launcher_new_low"
             android:theme="@style/Theme.GoSleep"
             tools:targetApi="31">
 
@@ -51,12 +51,14 @@
         </activity>
         <activity
                 android:name=".ui.FullScreenAlarmActivity"
+                android:label="@string/title_activity_alarm"
                 android:exported="true"
                 android:theme="@style/Theme.GoSleep"
                 android:showOnLockScreen="true"
                 android:turnScreenOn="true"
                 android:showWhenLocked="true"
                 android:launchMode="singleInstance"
+                android:noHistory="true"
         />
         <receiver android:name=".service.AlarmReceiver" android:exported="true" android:permission="android.permission.USE_EXACT_ALARM">
 
