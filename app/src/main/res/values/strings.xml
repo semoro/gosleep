@@ -2,4 +2,11 @@
     <string name="app_name">GoSleep</string>
     <string name="title_activity_main">GoSleep</string>
     <string name="title_activity_alarm">GoSleep Remainder</string>
+    <string name="wifi_dialog_title">Configure Home WiFi</string>
+    <string name="wifi_dialog_message">Enter the SSID of your home WiFi network:</string>
+    <string name="wifi_dialog_hint">WiFi SSID</string>
+    <string name="wifi_dialog_save">Save</string>
+    <string name="wifi_dialog_cancel">Cancel</string>
+    <string name="wifi_dialog_clear">Clear</string>
+    <string name="wifi_chip_label">Configure Home WiFi</string>
 </resources>

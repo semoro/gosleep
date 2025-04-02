@@ -3,13 +3,11 @@ package me.semoro.gosleep.ui
 import android.app.AlarmManager
 import android.app.Application
 import android.content.Context
-import android.net.wifi.WifiManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.*
-import kotlinx.datetime.TimeZone
 import me.semoro.gosleep.data.UserSettings
 import me.semoro.gosleep.data.UserSettingsRepository
 import me.semoro.gosleep.service.AlarmControl
@@ -20,7 +18,7 @@ import kotlin.time.Duration.Companion.seconds
 data class MainScreenState(
     val currentTime: Instant,
     val userSettings: UserSettings? = null,
-    val wifiName: String? = null,
+    val currentWifiSsid: String? = null,
     val chargingState: AlarmTriggerPrecondition.ChargingState = AlarmTriggerPrecondition.ChargingState(false, null),
     val currentZone: BedtimeZone = BedtimeZone.NONE,
     val nextAlarmTime: Instant? = null
@@ -42,7 +40,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
 
 
-    private val wifiName = MutableStateFlow(run {
+    private val currentWifiSsid = MutableStateFlow(run {
         AlarmTriggerPrecondition.getWifiNetwork(application)
     })
     private val chargingState = MutableStateFlow(run {
@@ -77,14 +75,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val mainScreenState: StateFlow<MainScreenState> = combine(
         _currentTime,
         userSettingsRepository.userSettingsFlow,
-        wifiName,
+        currentWifiSsid,
         chargingState
-    ) { currentTime, userSettings, wifiName, chargingState ->
+    ) { currentTime, userSettings, currentWifiSsid, chargingState ->
         val alarmManager = application.applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         MainScreenState(
             currentTime = currentTime,
             userSettings = userSettings,
-            wifiName = wifiName,
+            currentWifiSsid = currentWifiSsid,
             chargingState = chargingState,
             currentZone = userSettings.calculateCurrentZone(currentTime),
             nextAlarmTime = alarmManager.nextAlarmClock?.triggerTime?.let { Instant.fromEpochMilliseconds(it) }
@@ -111,5 +109,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun checkAndUpdateChargingState() {
+        chargingState.value = AlarmTriggerPrecondition.getChargingState(getApplication())
+    }
 
+    fun checkAndUpdateWifiName() {
+        currentWifiSsid.value = AlarmTriggerPrecondition.getWifiNetwork(getApplication())
+    }
+
+    fun updateHomeWifiSSID(ssid: String?) {
+        viewModelScope.launch {
+            userSettingsRepository.updateHomeWifiSSID(ssid)
+        }
+    }
 }

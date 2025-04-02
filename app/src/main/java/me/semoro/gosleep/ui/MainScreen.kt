@@ -24,6 +24,7 @@ import kotlinx.datetime.toLocalDateTime
 import me.semoro.gosleep.ui.components.SleepDurationSettingsChip
 import me.semoro.gosleep.ui.components.TimeDisplay
 import me.semoro.gosleep.ui.components.WakeUpTimeChip
+import me.semoro.gosleep.ui.components.WifiConfigChip
 import me.semoro.gosleep.ui.components.ZoneProgressIndicator
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -107,23 +108,23 @@ fun MainScreen(
                 )
 
 
-                AssistChip(
-                    onClick = { },
-                    label = { Text(state.wifiName ?: "No Wifi") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = if (state.wifiName == settings.homeWifiSSID && settings.homeWifiSSID != null) Icons.Default.Home else Icons.Default.LocationOn,
-                            contentDescription = null
-                        )
+                WifiConfigChip(
+                    requestCurrentWifiNameUpdate = {
+                        viewModel.checkAndUpdateWifiName()
+                    },
+                    currentWifiName = state.currentWifiSsid,
+                    homeWifiSSID = settings.homeWifiSSID,
+                    onUpdateHomeWifiSSID = { ssid ->
+                        viewModel.updateHomeWifiSSID(ssid)
                     }
                 )
             }
 
 
-
-
             AssistChip(
-                onClick = { },
+                onClick = {
+                    viewModel.checkAndUpdateChargingState()
+                },
                 label = { Text(state.chargingState.plugStatus ?: "Not connected") },
                 leadingIcon = {
                     Icon(
@@ -134,7 +135,9 @@ fun MainScreen(
             )
 
 
-            val nextAlarmTime = state.nextAlarmTime
+            val nextAlarmTime = remember(state.nextAlarmTime) {
+                state.nextAlarmTime?.toLocalDateTime(TimeZone.currentSystemDefault())
+            }
             AssistChip(
                 onClick = {
                     viewModel.triggerInitialAlarm()
