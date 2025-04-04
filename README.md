@@ -1,3 +1,4 @@
+![](app/src/main/res/mipmap-xxxhdpi/ic_launcher_fixed.webp)
 # GoSleep
 
 GoSleep is a smart bedtime reminder app that's perseverant enough to make me go to sleep :)  
