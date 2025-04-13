@@ -18,6 +18,23 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * Data class representing geofence settings
+ * @property latitude Latitude of home location for geofencing (null if not set)
+ * @property longitude Longitude of home location for geofencing (null if not set)
+ * @property radius Radius in meters for home geofence (default 100 meters)
+ */
+data class GeofenceSettings(
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val radius: Float = 100f // Default 100 meters
+) {
+    /**
+     * Check if geofence is set
+     * @return true if both latitude and longitude are not null
+     */
+    fun isSet(): Boolean = latitude != null && longitude != null
+}
 
 /**
  * Data class representing user settings for the GoSleep app
@@ -27,7 +44,8 @@ import kotlin.time.Duration.Companion.seconds
  * @property yellowZoneDuration Duration of red zone after yellow zone (default 30 minutes)
  * @property beepIntervalYellow How often to beep in yellow zone (default 10 minutes)
  * @property beepIntervalRed How often to beep in red zone (default 5 minutes)
- * @property homeWifiSSID SSID of home Wi-Fi network (null if using location instead)
+ * @property homeWifiSSID SSID of home Wi-Fi network (null if not set)
+ * @property geofenceSettings Settings for home geofence location
  */
 data class UserSettings(
     val wakeUpTime: LocalTime = LocalTime(7, 0), // Default wake up at 7:00
@@ -37,8 +55,13 @@ data class UserSettings(
     val beepIntervalGreen: Duration = GREEN_BEEP_INTERVAL,
     val beepIntervalYellow: Duration = YELLOW_BEEP_INTERVAL,
     val beepIntervalRed: Duration = RED_BEEP_INTERVAL,
-    val homeWifiSSID: String? = null
+    val homeWifiSSID: String? = null,
+    val geofenceSettings: GeofenceSettings = GeofenceSettings()
 ) {
+    // For backward compatibility
+    val homeLatitude: Double? get() = geofenceSettings.latitude
+    val homeLongitude: Double? get() = geofenceSettings.longitude
+    val homeGeofenceRadius: Float get() = geofenceSettings.radius
 
 
     fun calculateWakeUpTime(currentTime: LocalDateTime): Instant {

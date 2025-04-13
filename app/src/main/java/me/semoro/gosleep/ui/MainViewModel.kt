@@ -122,4 +122,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             userSettingsRepository.updateHomeWifiSSID(ssid)
         }
     }
+
+    /**
+     * Update home geofence coordinates
+     * @param latitude Latitude of home location
+     * @param longitude Longitude of home location
+     * @param radius Radius of geofence in meters
+     */
+    fun updateHomeGeofence(latitude: Double?, longitude: Double?, radius: Float = 100f) {
+        viewModelScope.launch {
+            // Create GeofenceSettings object
+            val geofenceSettings = me.semoro.gosleep.data.GeofenceSettings(
+                latitude = latitude,
+                longitude = longitude,
+                radius = radius
+            )
+
+            // Update geofence settings
+            userSettingsRepository.updateHomeGeofence(geofenceSettings)
+
+            // Set up geofencing after updating coordinates
+            if (geofenceSettings.isSet()) {
+                val geofenceHelper = me.semoro.gosleep.service.GeofenceHelper(getApplication())
+                val userSettings = userSettingsRepository.userSettingsFlow.first()
+                geofenceHelper.setupGeofencing(userSettings)
+            }
+        }
+    }
 }

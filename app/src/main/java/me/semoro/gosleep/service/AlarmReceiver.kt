@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import kotlinx.coroutines.flow.first
@@ -30,9 +29,15 @@ class AlarmReceiver : BroadcastReceiver() {
             val userSettingsRepository = UserSettingsRepository(context)
             val userSettings = userSettingsRepository.userSettingsFlow.first()
 
-            // Check if device is at home (connected to home WiFi)
+            // Check if device is at home (connected to home WiFi or within geofenced area)
             val currentSsid = AlarmTriggerPrecondition.getWifiNetwork(context)
-            val isAtHome = userSettings.homeWifiSSID != null && currentSsid == userSettings.homeWifiSSID
+            val isOnHomeWifi = userSettings.homeWifiSSID != null && currentSsid == userSettings.homeWifiSSID
+
+            // Check if device is within geofenced area
+            val isInGeofence = GeofenceHelper.isWithinGeofence(context, userSettings)
+
+            // Device is at home if either on home wifi or within geofenced area
+            val isAtHome = isOnHomeWifi || isInGeofence
 
             // Check if device is charging
             val (isCharging, plugStatus) = AlarmTriggerPrecondition.getChargingState(context)
@@ -43,7 +48,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
             val currentZone = userSettings.calculateCurrentZone(currentTime)
 
-            println("Alarm received at $currentTime, current zone: $currentZone, isAtHome: $isAtHome, isCharging: $isCharging")
+            println("Alarm received at $currentTime, current zone: $currentZone, isOnHomeWifi: $isOnHomeWifi, isInGeofence: $isInGeofence, isAtHome: $isAtHome, isCharging: $isCharging")
 
 
             val bedtimeStart = userSettings.calculateBedtimeStart(currentDateTime)
@@ -73,7 +78,7 @@ class AlarmReceiver : BroadcastReceiver() {
                         AlarmNotification.showAlarmNotification(context, currentZone)
                     }
                 } else {
-                    println("Declining alarm: Not at home (${currentSsid} != ${userSettings.homeWifiSSID})")
+                    println("Declining alarm: Not at home (WiFi: ${currentSsid} != ${userSettings.homeWifiSSID}, Geofence: $isInGeofence)")
                     // Re-try in an hour
                     nextAlarmTime = Clock.System.now() + 60.minutes
                 }

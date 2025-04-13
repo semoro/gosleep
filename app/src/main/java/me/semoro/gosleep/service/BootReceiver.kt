@@ -27,6 +27,14 @@ class BootReceiver : BroadcastReceiver() {
                 0,
                 Clock.System.now() + 1.minutes
             )
+
+            // Also re-register geofences
+            runBlocking {
+                val userSettingsRepository = UserSettingsRepository(context)
+                val userSettings = userSettingsRepository.userSettingsFlow.first()
+                val geofenceHelper = GeofenceHelper(context)
+                geofenceHelper.setupGeofencing(userSettings)
+            }
         }
     }
 }

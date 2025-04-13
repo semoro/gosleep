@@ -24,6 +24,9 @@ class UserSettingsRepository(private val context: Context) {
         val BEEP_INTERVAL_YELLOW = longPreferencesKey("beep_interval_yellow")
         val BEEP_INTERVAL_RED = longPreferencesKey("beep_interval_red")
         val HOME_WIFI_SSID = stringPreferencesKey("home_wifi_ssid")
+        val HOME_LATITUDE = doublePreferencesKey("home_latitude")
+        val HOME_LONGITUDE = doublePreferencesKey("home_longitude")
+        val HOME_GEOFENCE_RADIUS = floatPreferencesKey("home_geofence_radius")
     }
 
     val userSettingsFlow: Flow<UserSettings> = context.dataStore.data.map { preferences ->
@@ -40,6 +43,9 @@ class UserSettingsRepository(private val context: Context) {
 //        val redInterval = preferences[PreferencesKeys.BEEP_INTERVAL_RED]?.milliseconds
 //            ?: 5.minutes
         val homeWifiSSID = preferences[PreferencesKeys.HOME_WIFI_SSID]
+        val homeLatitude = preferences[PreferencesKeys.HOME_LATITUDE]
+        val homeLongitude = preferences[PreferencesKeys.HOME_LONGITUDE]
+        val homeGeofenceRadius = preferences[PreferencesKeys.HOME_GEOFENCE_RADIUS] ?: 100f
 
         UserSettings(
             wakeUpTime = LocalTime(hour, minute, 0, 0),
@@ -48,7 +54,12 @@ class UserSettingsRepository(private val context: Context) {
             yellowZoneDuration = redZoneDuration,
 //            beepIntervalYellow = yellowInterval,
 //            beepIntervalRed = redInterval,
-            homeWifiSSID = homeWifiSSID
+            homeWifiSSID = homeWifiSSID,
+            geofenceSettings = GeofenceSettings(
+                latitude = homeLatitude,
+                longitude = homeLongitude,
+                radius = homeGeofenceRadius
+            )
         )
     }
 
@@ -87,5 +98,33 @@ class UserSettingsRepository(private val context: Context) {
             preferences[PreferencesKeys.YELLOW_ZONE_DURATION] = yellowZoneDuration.inWholeMilliseconds
             preferences[PreferencesKeys.RED_ZONE_DURATION] = redZoneDuration.inWholeMilliseconds
         }
+    }
+
+    /**
+     * Update home geofence settings
+     * @param latitude Latitude of home location (null to clear)
+     * @param longitude Longitude of home location (null to clear)
+     * @param radius Radius of geofence in meters (default 100 meters)
+     */
+    suspend fun updateHomeGeofence(latitude: Double?, longitude: Double?, radius: Float = 100f) {
+        context.dataStore.edit { preferences ->
+            if (latitude != null && longitude != null) {
+                preferences[PreferencesKeys.HOME_LATITUDE] = latitude
+                preferences[PreferencesKeys.HOME_LONGITUDE] = longitude
+                preferences[PreferencesKeys.HOME_GEOFENCE_RADIUS] = radius
+            } else {
+                preferences.remove(PreferencesKeys.HOME_LATITUDE)
+                preferences.remove(PreferencesKeys.HOME_LONGITUDE)
+                preferences[PreferencesKeys.HOME_GEOFENCE_RADIUS] = 100f
+            }
+        }
+    }
+
+    /**
+     * Update home geofence settings using GeofenceSettings object
+     * @param settings GeofenceSettings object containing latitude, longitude, and radius
+     */
+    suspend fun updateHomeGeofence(settings: GeofenceSettings) {
+        updateHomeGeofence(settings.latitude, settings.longitude, settings.radius)
     }
 }

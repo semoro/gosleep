@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import me.semoro.gosleep.ui.components.GeofenceConfigChip
 import me.semoro.gosleep.ui.components.SleepDurationSettingsChip
 import me.semoro.gosleep.ui.components.TimeDisplay
 import me.semoro.gosleep.ui.components.WakeUpTimeChip
@@ -116,6 +117,13 @@ fun MainScreen(
                     homeWifiSSID = settings.homeWifiSSID,
                     onUpdateHomeWifiSSID = { ssid ->
                         viewModel.updateHomeWifiSSID(ssid)
+                    }
+                )
+
+                GeofenceConfigChip(
+                    geofenceSettings = settings.geofenceSettings,
+                    onUpdateHomeGeofence = { latitude, longitude, radius ->
+                        viewModel.updateHomeGeofence(latitude, longitude, radius)
                     }
                 )
             }
