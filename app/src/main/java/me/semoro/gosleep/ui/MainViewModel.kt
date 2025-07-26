@@ -149,4 +149,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
+    /**
+     * Update the setting to lock settings during bedtime
+     * @param lock Boolean value indicating whether to lock settings during bedtime
+     */
+    fun updateLockSettingsDuringBedtime(lock: Boolean) {
+        viewModelScope.launch {
+            userSettingsRepository.updateLockSettingsDuringBedtime(lock)
+        }
+    }
+
+    /**
+     * Check if settings should be locked based on current zone and user preference
+     * @return true if settings should be locked, false otherwise
+     */
+    fun shouldLockSettings(): Boolean {
+        val state = mainScreenState.value
+        // Lock settings if it's bedtime (any zone other than NONE) and the lock setting is enabled
+        return state.userSettings?.lockSettingsDuringBedtime == true && 
+               state.currentZone != BedtimeZone.NONE
+    }
 }

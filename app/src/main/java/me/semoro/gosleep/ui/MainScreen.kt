@@ -1,21 +1,28 @@
 package me.semoro.gosleep.ui
 
-import android.app.AlarmManager
-import android.content.Context
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.*
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -89,26 +96,30 @@ fun MainScreen(
         ) {
 
             state.userSettings?.let { settings ->
+                val isLocked = viewModel.shouldLockSettings()
+
                 WakeUpTimeChip(
                     currentTime = settings.wakeUpTime,
                     onTimeSelected = { newTime ->
-                        // Only allow changes outside bedtime hours
-    //                    if (state.currentZone == BedtimeZone.NONE) {
+                        // Only allow changes if settings are not locked
+                        if (!isLocked) {
                             viewModel.updateWakeUpTime(newTime)
-    //                    }
+                        }
                     },
-                    enabled = true//state.currentZone == BedtimeZone.NONE
+                    enabled = !isLocked
                 )
 
                 SleepDurationSettingsChip(
                     settings = settings,
                     onChangeSettings = { newSettings ->
-                        viewModel.updateSettings(newSettings)
+                        if (!isLocked) {
+                            viewModel.updateSettings(newSettings)
+                        }
                     },
-                    enabled = true
+                    enabled = !isLocked
                 )
 
-
+                // For components without enabled parameter, we need to handle locking in the onClick handlers
                 WifiConfigChip(
                     requestCurrentWifiNameUpdate = {
                         viewModel.checkAndUpdateWifiName()
@@ -116,18 +127,49 @@ fun MainScreen(
                     currentWifiName = state.currentWifiSsid,
                     homeWifiSSID = settings.homeWifiSSID,
                     onUpdateHomeWifiSSID = { ssid ->
-                        viewModel.updateHomeWifiSSID(ssid)
-                    }
+                        if (!isLocked) {
+                            viewModel.updateHomeWifiSSID(ssid)
+                        }
+                    },
+                    enabled = !isLocked
                 )
 
                 GeofenceConfigChip(
                     geofenceSettings = settings.geofenceSettings,
                     onUpdateHomeGeofence = { latitude, longitude, radius ->
-                        viewModel.updateHomeGeofence(latitude, longitude, radius)
-                    }
+                        if (!isLocked) {
+                            viewModel.updateHomeGeofence(latitude, longitude, radius)
+                        }
+                    },
+                    enabled = !isLocked
+                )
+
+                AssistChip(
+                    onClick = {
+                        // Only allow changing the toggle if not in bedtime
+                        viewModel.updateLockSettingsDuringBedtime(!settings.lockSettingsDuringBedtime)
+                    },
+                    label = {
+                        if (settings.lockSettingsDuringBedtime) {
+                            Text("Unlock Settings During Bedtime")
+                        } else {
+                            Text("Lock Settings During Bedtime")
+                        }
+                    },
+                    leadingIcon = {
+
+                        Icon(
+                            painter = if (settings.lockSettingsDuringBedtime) {
+                                painterResource(me.semoro.gosleep.R.drawable.baseline_lock_24)
+                            } else {
+                                painterResource(me.semoro.gosleep.R.drawable.baseline_lock_open_24)
+                            },
+                            contentDescription = null
+                        )
+                    },
+                    enabled = !isLocked // Can only toggle when not in bedtime
                 )
             }
-
 
             AssistChip(
                 onClick = {

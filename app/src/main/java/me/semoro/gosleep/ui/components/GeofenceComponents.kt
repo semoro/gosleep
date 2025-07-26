@@ -210,7 +210,8 @@ fun GeofenceConfigDialog(
 fun GeofenceConfigChip(
     geofenceSettings: me.semoro.gosleep.data.GeofenceSettings,
     onUpdateHomeGeofence: (Double?, Double?, Float) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean
 ) {
     var showDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -233,6 +234,7 @@ fun GeofenceConfigChip(
     ) {
         AssistChip(
             onClick = {
+                // Only show dialog if we're allowed to update settings
                 showDialog = true
             },
             label = { 
@@ -248,7 +250,8 @@ fun GeofenceConfigChip(
                     contentDescription = null
                 )
             },
-            modifier = modifier
+            modifier = modifier,
+            enabled = enabled
         )
     }
 

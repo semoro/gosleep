@@ -36,7 +36,7 @@ fun WifiConfigDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(stringResource(R.string.wifi_dialog_message))
-                
+
                 OutlinedTextField(
                     value = homeSsidText,
                     onValueChange = { homeSsidText = it },
@@ -89,7 +89,8 @@ fun WifiConfigChip(
     homeWifiSSID: String?,
     requestCurrentWifiNameUpdate: () -> Unit,
     onUpdateHomeWifiSSID: (String?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
@@ -112,7 +113,8 @@ fun WifiConfigChip(
                 contentDescription = null
             )
         },
-        modifier = modifier
+        modifier = modifier,
+        enabled = enabled
     )
 
     if (showDialog) {

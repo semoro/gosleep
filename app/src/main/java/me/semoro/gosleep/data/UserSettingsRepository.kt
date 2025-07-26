@@ -27,6 +27,7 @@ class UserSettingsRepository(private val context: Context) {
         val HOME_LATITUDE = doublePreferencesKey("home_latitude")
         val HOME_LONGITUDE = doublePreferencesKey("home_longitude")
         val HOME_GEOFENCE_RADIUS = floatPreferencesKey("home_geofence_radius")
+        val LOCK_SETTINGS_DURING_BEDTIME = booleanPreferencesKey("lock_settings_during_bedtime")
     }
 
     val userSettingsFlow: Flow<UserSettings> = context.dataStore.data.map { preferences ->
@@ -46,6 +47,7 @@ class UserSettingsRepository(private val context: Context) {
         val homeLatitude = preferences[PreferencesKeys.HOME_LATITUDE]
         val homeLongitude = preferences[PreferencesKeys.HOME_LONGITUDE]
         val homeGeofenceRadius = preferences[PreferencesKeys.HOME_GEOFENCE_RADIUS] ?: 100f
+        val lockSettingsDuringBedtime = preferences[PreferencesKeys.LOCK_SETTINGS_DURING_BEDTIME] ?: false
 
         UserSettings(
             wakeUpTime = LocalTime(hour, minute, 0, 0),
@@ -59,7 +61,8 @@ class UserSettingsRepository(private val context: Context) {
                 latitude = homeLatitude,
                 longitude = homeLongitude,
                 radius = homeGeofenceRadius
-            )
+            ),
+            lockSettingsDuringBedtime = lockSettingsDuringBedtime
         )
     }
 
@@ -126,5 +129,15 @@ class UserSettingsRepository(private val context: Context) {
      */
     suspend fun updateHomeGeofence(settings: GeofenceSettings) {
         updateHomeGeofence(settings.latitude, settings.longitude, settings.radius)
+    }
+
+    /**
+     * Update the setting to lock settings during bedtime
+     * @param lock Boolean value indicating whether to lock settings during bedtime
+     */
+    suspend fun updateLockSettingsDuringBedtime(lock: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LOCK_SETTINGS_DURING_BEDTIME] = lock
+        }
     }
 }

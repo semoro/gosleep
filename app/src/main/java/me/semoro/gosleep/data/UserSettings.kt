@@ -56,7 +56,8 @@ data class UserSettings(
     val beepIntervalYellow: Duration = YELLOW_BEEP_INTERVAL,
     val beepIntervalRed: Duration = RED_BEEP_INTERVAL,
     val homeWifiSSID: String? = null,
-    val geofenceSettings: GeofenceSettings = GeofenceSettings()
+    val geofenceSettings: GeofenceSettings = GeofenceSettings(),
+    val lockSettingsDuringBedtime: Boolean = false // Default: don't lock settings
 ) {
     // For backward compatibility
     val homeLatitude: Double? get() = geofenceSettings.latitude
