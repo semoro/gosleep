@@ -5,6 +5,7 @@ import android.media.AudioTrack
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Card
@@ -25,8 +26,10 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Duration.Companion.seconds
 import me.semoro.gosleep.audio.MidiSoundGenerator
 import me.semoro.gosleep.data.UserSettingsRepository
+import me.semoro.gosleep.service.AlarmControl
 import me.semoro.gosleep.ui.components.CyberpunkAccessPuzzle
 import me.semoro.gosleep.ui.components.TimeDisplay
 import me.semoro.gosleep.ui.components.ZoneProgressIndicator
@@ -55,6 +58,30 @@ class FullScreenAlarmActivity : ComponentActivity() {
 
         // Generate and play a random electronic sound
         audioTrack = MidiSoundGenerator.generateAndPlayRandomSound()
+
+        // Add back button handler to reset alarm in 10 seconds
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // Reset alarm to trigger in 10 seconds
+                val triggerTime = Clock.System.now().plus(10.seconds)
+                AlarmControl.setAlarm(applicationContext, 0, triggerTime)
+                println("Back button pressed, resetting alarm to trigger in 10 seconds at $triggerTime")
+
+                // Finish the activity
+                finishAndRemoveTask()
+            }
+        })
+
+        addOnUserLeaveHintListener {
+            // Reset alarm to trigger in 10 seconds
+            val triggerTime = Clock.System.now().plus(10.seconds)
+            AlarmControl.setAlarm(applicationContext, 0, triggerTime)
+            println("Home button pressed, resetting alarm to trigger in 10 seconds at $triggerTime")
+
+            // Finish the activity
+            finishAndRemoveTask()
+        }
+
 
         val repository = UserSettingsRepository(applicationContext)
 
